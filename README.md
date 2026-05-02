@@ -1,77 +1,73 @@
-# B2B Invoice Payment Delay Predictor
+# B2B Invoice Payment Delay Predictor for MSMEs
 
-**A Pro-active MSME Credit-Risk Research Tool**
+**An Advanced ML Survival Model for MSME Payment Risk Assessment**
 
-This project implements a machine learning system designed to predict payment delays in B2B invoices. By leveraging Survival Analysis (Time-to-Event modeling), it goes beyond simple binary classification to predict when a payment is likely to occur, providing a "Hazard Ratio" for B2B entities.
-
----
-
-## 🏗 Project Architecture & Workflow
-
-The system follows a modular pipeline designed for data lineage and research reproducibility:
-
-- **Ingestion**: Automated Playwright scripts navigate the MSME Samadhaan portal to harvest sector-wise payment data.
-- **Processing**: Raw HTML/Table data is cleaned and mapped to unique identifiers (CIN/Udyam).
-- **Signal Generation**: Feature engineering transforms static counts into survival durations and success ratios.
-- **Modeling**: A Cox Proportional Hazards (CPH) model estimates the probability of payment over time.
-- **Service**: A FastAPI backend serves these predictions as real-time risk scores.
+This project is an advanced Machine Learning Survival Model designed to predict payment delays for Micro, Small, and Medium Enterprises (MSMEs) when dealing with Central Public Sector Undertakings (CPSEs). By combining historical grievance data with real-time corporate financial signals, the system estimates the *Probability of Default/Delay* over time.
 
 ---
 
-## 📂 File Structure
+## 🚀 Current Status: Data Engineering Complete
 
-```
-B2B-invoice-payment-delay-predictor/
+The foundational data pipeline has been established, merging government delay records with external financial health metrics.
+
+### Phase 1 Achievements
+
+1. **MSME Samadhaan Scraper**: Successfully extracted aggregate grievance records (Amounts, Disposed Cases, Pending Cases) for Central PSUs.
+
+2. **External Signal Pipeline (`yfinance`)**: 
+   - Built a robust, dictionary-mapped scraper to pull real-time financial ratios (Debt-to-Equity, Profit Margins, Return on Equity) for major listed PSUs (e.g., IOCL, BHEL, NTPC).
+   - Engineered a fallback system that successfully identifies and isolates unlisted/100% government-owned entities (e.g., BSNL, Air India) for future data imputation.
+
+---
+
+## � Repository Structure
+
+```text
+B2B_Payment_Predictor/
+│
+├── config/
+│   └── settings.py              # Directory paths and global variables
+│
 ├── data/
-│   ├── raw/                # Scraped summary CSVs (Central PSU, Railways)
-│   ├── processed/          # Cleaned datasets for modeling & HR plots
+│   ├── raw/                     # Original scraped data (raw_central_psu_cases.csv)
+│   └── processed/               # Cleaned data (yfinance_signals.csv, unmapped_psus.csv)
+│
 ├── src/
 │   ├── scraper/
-│   │   ├── samadhaan_main.py      # STABLE: Aggregate PSU summary scraper
-│   │   └── discovery_engine.py    # UTILITY: Analyzes portal report structures
-│   ├── features/
-│   │   └── signal_generator.py    # Logic for duration and event calculation
-│   └── models/
-│       └── survival_cox.py        # CoxPH implementation & evaluation
-├── config/
-│   └── settings.py                # Path management & global constants
-├── app/
-│   └── api/                       # FastAPI backbone (Planned)
-├── requirements.txt               # Python 3.14+ dependencies
+│   │   ├── samadhaan_scraper.py # Extracts MSME delay counts
+│   │   └── yfinance_signals.py  # Extracts corporate financial ratios
+│   │
+│   └── models/                  # (Upcoming) ML model training scripts
+│
+├── requirements.txt             # Project dependencies (lifelines, yfinance, etc.)
 └── README.md
 ```
 
 ---
 
-## ✅ Achievements & Milestones
+## 🛠️ Tech Stack
 
-### 1. Automated Data Extraction
-- Developed a stable Playwright-based scraper (`samadhaan_main.py`) that handles nested iframes and ASP.NET postbacks.
-- Successfully mapped and extracted data for 295+ Central PSUs and government entities.
-
-### 2. Survival Model Baseline
-- Implemented a Cox Proportional Hazards model using the lifelines library.
-- Achieved a Concordance Index ($C$) of 0.67 on initial signals, providing a strong baseline for non-random prediction.
-- Generated Hazard Ratio (HR) visualizations demonstrating the impact of invoice amounts on payment probability.
-
-### 3. Engineering Robustness
-- Established a Zero-Footprint workflow: The system operates with standardized data folders and configuration paths, ensuring the model is portable.
+- **Language**: Python 3.10+
+- **Data Extraction**: yfinance, Playwright (deprecated for this use case), BeautifulSoup
+- **Data Processing**: Pandas, NumPy
+- **Machine Learning**: lifelines (Cox Proportional Hazards Model) - In Progress
+- **Frontend**: FastAPI, Streamlit - Planned
 
 ---
 
-## 📈 Technical Implementation Details
+## 📊 Next Steps (Phase 2: Modeling)
 
-The core of the prediction relies on the Partial Likelihood of the Cox Model:
+1. **Data Merging**: Combine `raw_central_psu_cases.csv` with `yfinance_signals.csv`.
 
-$$h(t|x) = h_0(t)\exp\left(\sum_{i=1}^{n}\beta_i x_i\right)$$
+2. **Imputation Strategy**: Assign an `Is_Public` flag and apply Sector Median Imputation for the unlisted PSUs isolated in `unmapped_psus.csv`.
 
-**Key Components:**
-- **Baseline Hazard** ($h_0(t)$): Represents the "risk" of payment delay over time for an average entity.
-- **Partial Log-Likelihood**: Optimized to $-590.29$ during the latest training run.
+3. **Feature Engineering**: Calculate the 'Hazard Ratio' proxy using Total Pending Cases vs. Disposed Cases.
+
+4. **Model Training**: Train the lifelines Cox Proportional Hazards Model to output survival curves for invoice payment probability.
 
 ---
 
-## Setup Instructions
+## ⚙️ Setup Instructions
 
 ### 1. Install Dependencies
 ```bash
@@ -79,75 +75,21 @@ pip install -r requirements.txt
 ```
 
 ### 2. Configure Environment
-- Copy `.env.example` to `.env`
-- Update API keys and database URLs
+- Update `config/settings.py` with appropriate data paths
+- Set up API keys if using external data sources
 
-### 3. Data Pipeline
-- Place raw files in `data/raw/`
-- Run data cleaning modules from `src/data_cleaning/`
-- Processed data will be saved to `data/processed/`
-
-### 4. Run the Application
-
-**API Server:**
+### 3. Run Data Extraction
 ```bash
-python -m uvicorn app.api:app --reload
+# Extract MSME grievance data
+python -m src.scraper.samadhaan_scraper
+
+# Extract financial signals from yfinance
+python -m src.scraper.yfinance_signals
 ```
 
-**Dashboard:**
+### 4. Data Processing
 ```bash
-streamlit run app/dashboard.py
+# Processed data will be generated in data/processed/
+# - yfinance_signals.csv: Financial ratios for listed PSUs
+# - unmapped_psus.csv: Unlisted/government-owned entities for imputation
 ```
-
----
-
-## 🚀 Remaining Roadmap
-
-### Phase 1: Feature Enrichment (Current)
-- Integrate Tofler API financial metrics (Profit Margin, Debt-to-Equity) to replace simulated baseline features.
-- Implement Interval Censoring logic to handle binned data from the "Age-Category" reports.
-
-### Phase 2: System Integration
-- **FastAPI Backbone**: Develop `/predict` endpoints for real-time risk assessment.
-- **Trust Matrix**: A visualization dashboard to rank companies from "Platinum" (Safe) to "Critical" (High Risk).
-
-### Phase 3: Research Output
-- Finalize a pro-active predictive model capable of assisting in credit-term negotiations for MSMEs.
-
----
-
-## Key Features
-
-- **Data Scraping**: Automated extraction from Samadhaan portal
-- **Data Integration**: Merges Samadhaan data with Tofler API and RBI reports
-- **Feature Engineering**: Generates asymmetry ratios and quarter-end flags
-- **Survival Analysis**: Cox Proportional Hazards model for time-to-event prediction
-- **Interpretability**: Hazard Ratio visualizations and Trust Matrix rankings
-
-## Dependencies
-
-- **Data**: pandas, numpy, openpyxl
-- **ML**: scikit-learn, xgboost, lifelines, shap
-- **Web**: FastAPI, Streamlit, Selenium, Playwright
-- **Viz**: matplotlib, seaborn, plotly
-
-## Development
-
-- Format code with Black: `black src/`
-- Lint with Flake8: `flake8 src/`
-- Run tests: `pytest`
-
----
-
-## Project Status
-
-**Lead Developer**: Bikram Hawladar  
-**Status**: Active Development (Research Phase)
-
----
-
-## Notes
-
-- Keep `.env` files out of version control
-- Use CIN as primary company identifier
-- Maintain data lineage through interim folder

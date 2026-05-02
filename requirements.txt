@@ -14,6 +14,7 @@ playwright>=1.41.0
 beautifulsoup4>=4.12.0
 thefuzz>=0.22.0     # CRITICAL for matching Samadhaan names to Tofler
 python-dotenv>=1.0.0
+yfinance>=0.2.33
 
 # --- File Handling ---
 openpyxl>=3.1.0     # For .xlsx
