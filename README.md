@@ -125,7 +125,9 @@ This project answers that question through data science.
 
 The **Delay Risk Ratio** formula:
 
-$$\text{Delay Risk Ratio} = \frac{\text{Pending Cases}}{\text{Total Cases}}$$
+```
+Delay Risk Ratio = Pending Cases / Total Cases
+```
 
 **Classification Rule:**
 - **High Risk** (1): Delay_Risk_Ratio > 0.50
@@ -149,10 +151,14 @@ Implemented keyword-based heuristic to classify companies:
 #### Sector-Relative Scaling
 
 **Sector-Relative Profit:**
-$$\text{SR\_Profit} = \text{Company Profit} - \text{Sector Median Profit}$$
+```
+SR_Profit = Company Profit - Sector Median Profit
+```
 
 **Sector-Relative Debt:**
-$$\text{SR\_Debt} = \text{Company D/E Ratio} - \text{Sector Median D/E}$$
+```
+SR_Debt = Company D/E Ratio - Sector Median D/E
+```
 
 **Why?**
 > A 5% profit margin is "Good" for a utility company but "Bad" for a tech firm. Scaling provides context and helps the model understand relative performance within industry norms.
