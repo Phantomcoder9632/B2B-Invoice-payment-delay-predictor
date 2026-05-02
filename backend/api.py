@@ -17,6 +17,10 @@ from pydantic import BaseModel, Field
 from typing import Optional
 import uvicorn
 
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 from inference import predict_single, predict_batch, _features, _model, DECISION_THRESHOLD
 
 # ── App Setup ────────────────────────────────────────────
