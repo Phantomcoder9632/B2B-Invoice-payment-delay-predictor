@@ -5,7 +5,7 @@
  * or throws an Error with a user-friendly message if the request fails.
  */
 
-const BASE_URL = "http://localhost:8000"
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000"
 
 async function fetchJSON(path, options = {}) {
   try {
