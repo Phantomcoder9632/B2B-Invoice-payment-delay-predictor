@@ -43,7 +43,9 @@ app.add_middleware(
         "http://127.0.0.1:5175",
         "http://127.0.0.1:5176",
         "http://localhost:3000",
+        "https://your-app-name.vercel.app", # Your specific Vercel URL
     ],
+    allow_origin_regex=r"https://.*\.vercel\.app", # Allow all Vercel deployments (including previews)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
