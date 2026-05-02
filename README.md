@@ -34,54 +34,54 @@ This project answers that question through data science.
 │                       DATA ACQUISITION                          │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  MSME Samadhaan Scraper          Yahoo Finance API            │
-│  (Grievance Data)                (Financial Signals)           │
-│  ├─ Company Names                ├─ Debt-to-Equity            │
-│  ├─ Disposed Cases               ├─ Profit Margin             │
-│  ├─ Pending Cases                ├─ ROE                       │
-│  └─ Amount Involved              └─ Ticker Presence           │
-│            │                              │                    │
-│            └──────────────┬───────────────┘                    │
+│        MSME Samadhaan Scraper          Yahoo Finance API        │
+│        (Grievance Data)                (Financial Signals)      │
+│        ├─ Company Names                ├─ Debt-to-Equity        │
+│        ├─ Disposed Cases               ├─ Profit Margin         │
+│        ├─ Pending Cases                ├─ ROE                   │
+│        └─ Amount Involved              └─ Ticker Presence       │
+│                  │                              │               │
+│                  └──────────────┬───────────────┘               │
 │                           ↓                                     │
-│           Raw CSV Datasets (150+ CPSEs)                        │
+│                     Raw CSV Datasets (150+ CPSEs)               │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
                             ↓
-┌─────────────────────────────────────────────────────────────────┐
-│                  PREPROCESSING & ENGINEERING                    │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ✓ Fuzzy Name Merging (thefuzz library)                        │
-│  ✓ Median Imputation (Handle missing financial data)           │
+┌────────────────────────────────────────────────────────────────┐
+│                  PREPROCESSING & ENGINEERING                   │
+├────────────────────────────────────────────────────────────────┤
+│                                                                |
+│  ✓ Fuzzy Name Merging (thefuzz library)                        |
+│  ✓ Median Imputation (Handle missing financial data)           |
 │  ✓ Sector Categorization (5 sectors)                           │
 │  ✓ Sector-Relative Feature Scaling                             │
 │  ✓ SMOTE (Synthetic Minority Oversampling)                     │
-│                                                                 │
+│                                                                │
 │  Output: Feature Matrix [10 dimensions × 150 companies]        │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+│                                                                │
+└────────────────────────────────────────────────────────────────┘
                             ↓
-┌─────────────────────────────────────────────────────────────────┐
-│                    ML PIPELINE PHASE                            │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
+┌────────────────────────────────────────────────────────────────┐
+│                    ML PIPELINE PHASE                           │
+├────────────────────────────────────────────────────────────────┤
+│                                                                │
 │  1. Bayesian Optimization (Optuna - 150 trials)                │
 │  2. XGBoost Classifier Training                                │
 │  3. Dynamic Threshold Tuning (Recall-focused)                  │
 │  4. Cross-Validation & Evaluation                              │
-│                                                                 │
-│  Output: Best Model (87.5% Accuracy, 88% Recall)              │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+│                                                                │
+│  Output: Best Model (87.5% Accuracy, 88% Recall)               │
+│                                                                │
+└────────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────────┐
 │                        OUTPUT LAYER                             │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  ✓ Model Persistence (.pkl files)                              │
-│  ✓ Feature Importance Analysis                                 │
-│  ✓ Risk Score (0-100) with confidence                          │
-│  ✓ Actionable Recommendations                                  │
+│  ✓ Model Persistence (.pkl files)                               │
+│  ✓ Feature Importance Analysis                                  │
+│  ✓ Risk Score (0-100) with confidence                           │
+│  ✓ Actionable Recommendations                                   │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
