@@ -1,0 +1,416 @@
+/* ═══════════════════════════════════════════════════════════════
+   PROFESSIONAL DASHBOARD REBUILD — index.css additions
+   Covers: Design tokens, dashboard-specific components,
+   all cards, timeline, data tables, badges, glows, animations
+═══════════════════════════════════════════════════════════════ */
+
+/* ── 1. DESIGN TOKENS (override / extend) ─────────────────── */
+:root {
+  --navy:         #0A1628;
+  --navy-mid:     #112240;
+  --navy-light:   #1A3050;
+  --gold:         #E6B84A;
+  --gold-dim:     rgba(230,184,74,.18);
+  --gold-border:  rgba(230,184,74,.28);
+  --red:          #EF4444;
+  --orange:       #F97316;
+  --amber:        #F59E0B;
+  --green:        #10B981;
+  --blue:         #3B82F6;
+  --slate:        #94A3B8;
+  --slate-light:  #CBD5E1;
+  --bg:           #F0F4F8;
+  --bg-dot:       #F0F4F8;
+  --white:        #FFFFFF;
+  --text-primary: #0F172A;
+  --text-muted:   #64748B;
+  --border:       #E2E8F0;
+  --radius:       14px;
+  --radius-sm:    8px;
+  --shadow-sm:    0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow:       0 4px 16px rgba(0,0,0,.07), 0 1px 3px rgba(0,0,0,.05);
+  --shadow-lg:    0 16px 48px rgba(0,0,0,.1), 0 4px 16px rgba(0,0,0,.06);
+  --transition:   .2s cubic-bezier(.4,0,.2,1);
+  --sidebar-w:    240px;
+  --font-body:    'Inter', -apple-system, sans-serif;
+  --font-display: 'Lora', Georgia, serif;
+}
+
+/* ── 2. RESET & BASE ───────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+/* ── 3. LAYOUT ─────────────────────────────────────────────── */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--bg);
+}
+
+.screen-pad { padding: 32px 40px 60px; }
+
+/* ── 4. TOP NAVBAR (Modern Floating SaaS Design) ─────────────── */
+.navbar-wrap {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  padding: 16px 32px 0;
+  background: transparent;
+  pointer-events: none;
+}
+.navbar {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 16px;
+  padding: 8px 16px;
+  height: 64px;
+  box-shadow: 0 4px 20px rgba(10,22,40,0.04), 0 1px 3px rgba(10,22,40,0.02);
+  pointer-events: auto;
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-right: 48px;
+  flex-shrink: 0;
+  padding-left: 8px;
+}
+
+.navbar-brand-icon {
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--navy), var(--navy-light));
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 10px rgba(10,22,40,0.15);
+}
+
+.navbar-brand-name {
+  font-family: var(--font-display);
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--text-primary);
+  white-space: nowrap;
+  letter-spacing: -.02em;
+}
+
+.navbar-brand-sub { font-size: 10px; color: var(--text-muted); font-weight: 600; margin-top: 1px; letter-spacing: .02em; text-transform: uppercase; }
+
+.navbar-nav { display: flex; align-items: center; gap: 4px; flex: 1; }
+
+.navbar-link {
+  position: relative;
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 16px;
+  height: 40px;
+  background: none;
+  border: none;
+  border-radius: 10px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition);
+}
+.navbar-link:hover { color: var(--text-primary); background: rgba(241, 245, 249, 0.6); }
+.navbar-link.active { color: var(--gold); }
+
+.navbar-link-indicator {
+  position: absolute;
+  inset: 0;
+  background: rgba(230,184,74,.1);
+  border-radius: 10px;
+  border: 1px solid rgba(230,184,74,.2);
+  z-index: 0;
+}
+.navbar-link-content { position: relative; z-index: 1; display: flex; align-items: center; gap: 8px; }
+
+.navbar-right { display: flex; align-items: center; gap: 14px; margin-left: auto; padding-right: 4px; }
+
+.navbar-help-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 12px; font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: all var(--transition);
+}
+.navbar-help-btn:hover { background: #F1F5F9; color: var(--text-primary); border-color: #CBD5E1; }
+
+.navbar-status {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px;
+  background: #F0FDF4;
+  border-radius: 10px;
+  border: 1px solid #86EFAC;
+}
+.navbar-status-label { font-size: 11px; color: #059669; font-weight: 700; line-height: 1; }
+.navbar-status-sub   { font-size: 9px; color: #10B981; margin-top: 2px; font-weight: 600; }
+
+.status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 8px #10B981;
+  flex-shrink: 0;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* ── 5. SHARED CARD SYSTEM ─────────────────────────────────── */
+.card {
+  background: var(--white);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.card-pad { padding: 24px; }
+.card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+}
+.card-title { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.card-sub   { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+/* ── 6. STAT CARDS ─────────────────────────────────────────── */
+.stat-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  border-top: 3px solid var(--accent, #0A1628);
+  padding: 22px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition), transform var(--transition);
+}
+.stat-card:hover {
+  box-shadow: var(--shadow);
+  transform: translateY(-2px);
+}
+.stat-card-icon-wrap {
+  width: 36px; height: 36px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 14px;
+}
+.stat-card-label {
+  font-size: 10px; font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: .1em; text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.stat-card-value {
+  font-size: 30px; font-weight: 800;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.stat-card-sub { font-size: 11px; color: var(--text-muted); }
+
+/* ── 7. GRIDS ──────────────────────────────────────────────── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+
+/* ── 8. FORM ELEMENTS ──────────────────────────────────────── */
+.form-group { margin-bottom: 16px; }
+.form-label {
+  display: block; font-size: 12px; font-weight: 600;
+  color: var(--text-muted); margin-bottom: 6px; letter-spacing: .01em;
+}
+.form-input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px; font-family: var(--font-body);
+  color: var(--text-primary);
+  background: var(--white);
+  transition: border-color var(--transition), box-shadow var(--transition);
+  outline: none;
+}
+.form-input:focus {
+  border-color: #0A1628;
+  box-shadow: 0 0 0 3px rgba(10,22,40,.08);
+}
+.form-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%2394A3B8' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+
+/* ── 9. BUTTONS ────────────────────────────────────────────── */
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 10px 22px;
+  background: var(--navy);
+  color: #fff;
+  border: none; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 600; font-family: var(--font-body);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.btn-primary:hover { background: #1A3050; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(10,22,40,.25); }
+.btn-primary:disabled { opacity: .55; transform: none; cursor: not-allowed; }
+
+.btn-secondary {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 18px;
+  background: #F8FAFC;
+  color: var(--text-muted);
+  border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 500; font-family: var(--font-body);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.btn-secondary:hover { background: #F1F5F9; color: var(--text-primary); border-color: #CBD5E1; }
+
+.btn-gold {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 10px 22px;
+  background: var(--gold);
+  color: var(--navy);
+  border: none; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 700; font-family: var(--font-body);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.btn-gold:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(230,184,74,.35); }
+
+/* ── 10. BADGES ────────────────────────────────────────────── */
+.risk-badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; border-radius: 6px;
+  font-size: 11px; font-weight: 700;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.sector-pill {
+  display: inline-block;
+  padding: 2px 9px; border-radius: 5px;
+  font-size: 10px; font-weight: 600;
+  background: #EFF6FF; color: #2563EB;
+  border: 1px solid #BFDBFE;
+}
+
+/* ── 11. DATA TABLE ────────────────────────────────────────── */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+  padding: 10px 14px;
+  text-align: left; font-size: 10px; font-weight: 700;
+  color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em;
+  border-bottom: 1px solid var(--border); background: #F8FAFC;
+}
+.data-table td {
+  padding: 11px 14px;
+  font-size: 12.5px;
+  border-bottom: 1px solid #F1F5F9;
+  vertical-align: middle;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tbody tr:hover { background: #F8FAFC; }
+
+/* ── 12. PROGRESS BARS ─────────────────────────────────────── */
+.progress-track {
+  width: 100%; height: 6px;
+  background: #F1F5F9; border-radius: 99px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0A1628, #3B82F6);
+  border-radius: 99px;
+  transition: width 1s ease;
+}
+
+/* ── 13. EMPTY + SPINNER ───────────────────────────────────── */
+.empty-state {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 60px 20px; text-align: center; gap: 12px;
+}
+.empty-state-title { font-size: 15px; font-weight: 600; color: var(--text-muted); }
+.empty-state-sub   { font-size: 13px; color: #CBD5E1; max-width: 320px; }
+
+.spinner {
+  width: 32px; height: 32px;
+  border: 3px solid #E2E8F0;
+  border-top-color: var(--navy);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+
+/* ── 14. UTILITY ───────────────────────────────────────────── */
+.flex-row    { display: flex; align-items: center; }
+.flex-between{ display: flex; align-items: center; justify-content: space-between; }
+.mb-24       { margin-bottom: 24px; }
+.mb-28       { margin-bottom: 28px; }
+.mono        { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+.error-box   { background: #FEF2F2; border: 1px solid #FCA5A5; color: #DC2626; border-radius: 8px; padding: 10px 14px; font-size: 12px; }
+.insight-box { border-left: 3px solid; padding: 12px 16px; border-radius: 0 8px 8px 0; font-size: 13px; margin-bottom: 16px; }
+
+/* ── 15. GAUGE ─────────────────────────────────────────────── */
+.gauge-wrap { text-align: center; }
+.gauge-label { font-size: 16px; font-weight: 700; font-family: var(--font-display); margin-top: 4px; }
+.gauge-sub   { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+/* ── 16. DROP ZONE ─────────────────────────────────────────── */
+.drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 52px 32px;
+  text-align: center;
+  background: var(--white);
+  transition: all var(--transition);
+  cursor: pointer;
+}
+.drop-zone.dragging {
+  border-color: var(--navy);
+  background: rgba(10,22,40,.03);
+  transform: scale(1.01);
+}
+
+/* ── 17. SCREEN HEADERS ────────────────────────────────────── */
+.screen-header { margin-bottom: 28px; }
+.screen-title {
+  font-size: 26px; font-weight: 800;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  letter-spacing: -.02em; line-height: 1.2;
+}
+.screen-sub { font-size: 13px; color: var(--text-muted); margin-top: 5px; }
+
+/* ── 18. ANIMATIONS ────────────────────────────────────────── */
+@keyframes spin     { to { transform: rotate(360deg); } }
+@keyframes fadeUp   { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 6px #10B981; opacity: 1; }
+  50%       { box-shadow: 0 0 14px #10B981; opacity: .7; }
+}
+@keyframes shimmer {
+  from { background-position: -400px 0; }
+  to   { background-position: 400px 0; }
+}
+
+.fade-up { animation: fadeUp .45s ease both; }

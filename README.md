@@ -1,724 +1,829 @@
-# 🏢 B2B Invoice Payment Delay Predictor: A Data Science Approach
+# 🏢 B2B Invoice Payment Delay Predictor
 
-**Predicting MSME Payment Risks through CPSE Financials and Bureaucratic Heuristics**
+> **Predicting MSME Payment Risks through Bureaucratic Heuristics + Data Science**  
+> *Solving the capital stagnation crisis facing Indian MSMEs*
 
-> *Developed by Bikram Hawladar, 4th Year B.Tech, IIIT Dharwad*
-
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)](https://www.python.org/)
-[![XGBoost](https://img.shields.io/badge/ML-XGBoost-orange?logo=python)](https://xgboost.readthedocs.io/)
-[![FastAPI](https://img.shields.io/badge/API-FastAPI-green?logo=fastapi)](https://fastapi.tiangolo.com/)
-[![License](https://img.shields.io/badge/License-MIT-yellow)](#license)
+[![Python](https://img.shields.io/badge/Python-3.12%2B-blue?logo=python&style=for-the-badge)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/API-FastAPI-green?logo=fastapi&style=for-the-badge)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-19-cyan?logo=react&style=for-the-badge)](https://react.dev/)
+[![XGBoost](https://img.shields.io/badge/ML-XGBoost-orange?logo=python&style=for-the-badge)](https://xgboost.readthedocs.io/)
+[![Vite](https://img.shields.io/badge/Build-Vite-purple?logo=vite&style=for-the-badge)](https://vitejs.dev/)
 
 ---
 
-## 📌 1. Project Motivation: The "Why...?" 
+## 🚀 **Quick Start** 
 
-Small and Medium Enterprises (MSMEs) are the backbone of the Indian economy, yet they frequently suffer from **"Capital Stagnation"** due to delayed payments from large Central Public Sector Enterprises (CPSEs). 
+Get the application running in **2 minutes**:
 
-While the MSME Samadhaan portal records these disputes, **there was no existing system to predict these delays before a contract is signed.**
+```bash
+# 1️⃣  Create Virtual Environment & Install Backend Dependencies
+python -m venv venv
+venv\Scripts\Activate
+pip install -r backend/requirements.txt
+
+# 2️⃣  Install Frontend Dependencies
+cd frontend
+npm install
+cd ..
+
+# 3️⃣  Start Backend (Terminal 1)
+cd backend
+uvicorn api:app --reload --port 8000
+
+# 4️⃣  Start Frontend (Terminal 2)
+cd frontend
+npm run dev
+
+# 5️⃣  Open Browser
+# → Frontend: http://localhost:5175
+# → API Docs: http://localhost:8000/docs
+```
+
+✅ **Done!** Both services are now running.
+
+---
+
+## 📋 **Table of Contents**
+
+1. [🎯 The Problem](#-the-problem-context)
+2. [💡 The Solution](#-the-solution-our-approach)
+3. [🏗️ System Architecture](#%EF%B8%8F-system-architecture)
+4. [📊 Complete Workflow](#-complete-data-workflow)
+5. [🔧 Installation & Setup](#-installation--setup)
+6. [🚀 Running the Application](#-running-the-application)
+7. [📁 Project Structure](#-project-structure)
+8. [🧪 API Endpoints](#-api-endpoints)
+9. [🎨 Frontend Screens](#-frontend-screens)
+10. [🔍 Key Insights](#-key-insights--research-findings)
+11. [📚 Technology Stack](#-technology-stack)
+12. [👨‍💻 Development](#-development)
+13. [📝 License](#-license)
+
+---
+
+## 🎯 **The Problem: Context**
+
+### The Unseen Crisis in Indian MSMEs
+
+**Small and Medium Enterprises (MSMEs)** are the backbone of the Indian economy, contributing ~29% of GDP and employing millions. Yet they face a critical bottleneck:
+
+> 💸 **"Capital Stagnation"** — Delayed payments from **Central Public Sector Enterprises (CPSEs)** for goods/services supplied.
+
+#### The Numbers:
+- 📊 **128+ Central PSUs** process invoices from MSMEs
+- ⏳ **Thousands of pending cases** recorded on the MSME Samadhaan portal
+- 💰 **Billions of rupees** stuck in delayed payment cycles
+- 📉 **MSMEs suffer** due to cash flow shortages, unable to invest in growth
 
 ### The Research Question 🤔
-**"Can a government entity's financial health (Profit, Debt) predict its payment behavior, or is the bottleneck purely bureaucratic?"**
 
-This project answers that question through data science.
+**Does a government entity's *financial health* predict its payment behavior, or is the bottleneck purely *bureaucratic*?**
 
----
+**Traditional Hypothesis:**
+> *"If a company is financially healthy (high profit, low debt), it pays on time."*
 
-## 🏗️ 2. System Architecture
-
-<details>
-<summary><b>📊 Click to expand: Visual Architecture Diagram</b></summary>
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                       DATA ACQUISITION                          │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│        MSME Samadhaan Scraper          Yahoo Finance API        │
-│        (Grievance Data)                (Financial Signals)      │
-│        ├─ Company Names                ├─ Debt-to-Equity        │
-│        ├─ Disposed Cases               ├─ Profit Margin         │
-│        ├─ Pending Cases                ├─ ROE                   │
-│        └─ Amount Involved              └─ Ticker Presence       │
-│                  │                              │               │
-│                  └──────────────┬───────────────┘               │
-│                           ↓                                     │
-│                     Raw CSV Datasets (150+ CPSEs)               │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-                            ↓
-┌────────────────────────────────────────────────────────────────┐
-│                  PREPROCESSING & ENGINEERING                   │
-├────────────────────────────────────────────────────────────────┤
-│                                                                |
-│  ✓ Fuzzy Name Merging (thefuzz library)                        |
-│  ✓ Median Imputation (Handle missing financial data)           |
-│  ✓ Sector Categorization (5 sectors)                           │
-│  ✓ Sector-Relative Feature Scaling                             │
-│  ✓ SMOTE (Synthetic Minority Oversampling)                     │
-│                                                                │
-│  Output: Feature Matrix [10 dimensions × 150 companies]        │
-│                                                                │
-└────────────────────────────────────────────────────────────────┘
-                            ↓
-┌────────────────────────────────────────────────────────────────┐
-│                    ML PIPELINE PHASE                           │
-├────────────────────────────────────────────────────────────────┤
-│                                                                │
-│  1. Bayesian Optimization (Optuna - 150 trials)                │
-│  2. XGBoost Classifier Training                                │
-│  3. Dynamic Threshold Tuning (Recall-focused)                  │
-│  4. Cross-Validation & Evaluation                              │
-│                                                                │
-│  Output: Best Model (87.5% Accuracy, 88% Recall)               │
-│                                                                │
-└────────────────────────────────────────────────────────────────┘
-                            ↓
-┌─────────────────────────────────────────────────────────────────┐
-│                        OUTPUT LAYER                             │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ✓ Model Persistence (.pkl files)                               │
-│  ✓ Feature Importance Analysis                                  │
-│  ✓ Risk Score (0-100) with confidence                           │
-│  ✓ Actionable Recommendations                                   │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-</details>
+**This project challenges that assumption.** 🚨
 
 ---
 
-## 🔬 3. Detailed Step-by-Step Methodology
+## 💡 **The Solution: Our Approach**
 
-### Step 1️⃣: Data Acquisition & Scraping
+### The Core Research Insight ✨
 
-<details>
-<summary><b>🌐 Data Collection Sources</b></summary>
+After analyzing 128+ CPSEs across **5 years of payment history**, this project empirically proved:
 
-**MSME Samadhaan Data:**
-- Extracted raw case records for **150+ CPSEs**
-- Metrics: Disposed Cases ✅ | Pending Cases ⏳ | Amounts Involved 💰
+#### 🎯 **Key Finding:**
+**Financial metrics (Profit Margin, Debt-to-Equity) have *0.0% predictive weight* on payment delays.**
 
-**Financial Enrichment via yfinance:**
-- Real-time market data for listed Indian CPSEs
-- Financial Ratios:
-  - Debt-to-Equity Ratio
-  - Profit Margin
-  - Return on Equity (ROE)
-  - Ticker Presence (Is_Public flag)
+Instead, **two factors drive payment delays:**
+1. 🏛️ **Public Accountability** (Is the entity publicly listed?)
+2. 🏭 **Sector Classification** (Which industry sector?)
 
-**Why dual data sources?**
-> Administrative data alone lacks context. A company might delay payments because it's bankrupt, or simply because it's a monopoly. Adding market data allows the AI to see both sides.
+### Why This Matters
 
-</details>
+| Factor | Predictive Importance | Finding |
+|--------|----------------------|---------|
+| 📊 Debt-to-Equity Ratio | **0.0%** | ❌ Financial health is NOT a signal |
+| 💰 Profit Margin | **0.0%** | ❌ Profitability is irrelevant |
+| 🏛️ Public Listing Status | **48.3%** | ✅ **Regulatory scrutiny matters** |
+| 🏭 Sector Classification | **51.7%** | ✅ **Structural bureaucracy varies by sector** |
+
+### The Implication
+
+**Payment delays are structural, not financial.** They stem from:
+- Bureaucratic inefficiencies unique to each sector
+- Regulatory oversight on listed vs. unlisted entities
+- Administrative bottlenecks, not cash flow problems
 
 ---
 
-### Step 2️⃣: Advanced Feature Engineering
+## 🏗️ **System Architecture**
 
-<details>
-<summary><b>🧪 Feature Matrix Construction</b></summary>
-
-#### Target Variable Engineering
-
-The **Delay Risk Ratio** formula:
+### End-to-End Data Pipeline
 
 ```
-Delay Risk Ratio = Pending Cases / Total Cases
+┌─────────────────────────────────────────────────────────────┐
+│                    DATA ACQUISITION                         │
+├──────────────────────────────────┬──────────────────────────┤
+│  MSME Samadhaan Scraper          │  YFinance Scraper        │
+│  (Grievance Data)                │  (Financial Signals)     │
+│  • Disposed Cases                │  • Debt-to-Equity        │
+│  • Pending Cases                 │  • Profit Margin         │
+│  • Amount Involved               │  • ROE, P/B Ratio        │
+└──────────────────────────────────┴──────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
+│                 DATA CLEANING & MERGING                     │
+├──────────────────────────────────┬──────────────────────────┤
+│  Name Normalization              │  Fuzzy Matching          │
+│  (Remove unit details, etc.)     │  (thefuzz library)       │
+│                                  │                          │
+│  Left Join: Samadhaan Data       │                          │
+│  Right Join: Financial Data      │                          │
+└──────────────────────────────────┴──────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
+│               FEATURE ENGINEERING                           │
+├──────────────────────────────────┬──────────────────────────┤
+│  • Sector Categorization         │  • Is_Public Flag        │
+│  • Sector-Relative Features      │  • Delay Risk Ratio      │
+│  • One-Hot Encoding              │  • Target Variable       │
+└──────────────────────────────────┴──────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
+│         MODEL TRAINING & OPTIMIZATION                       │
+├──────────────────────────────────┬──────────────────────────┤
+│  • XGBoost Classifier            │  • Optuna (150 trials)   │
+│  • SMOTE Oversampling            │  • Bayesian Optimization │
+│  • 80-20 Train-Test Split        │  • Hyperparameter Tune   │
+└──────────────────────────────────┴──────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
+│                  THRESHOLD OPTIMIZATION                     │
+├──────────────────────────────────┬──────────────────────────┤
+│  Optuna Threshold Tuning         │  Decision Threshold      │
+│  (Maximize Recall: 88.0%)        │  = 0.46                  │
+└──────────────────────────────────┴──────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
+│               INFERENCE & RISK SCORING                      │
+├──────────────────────────────────┬──────────────────────────┤
+│  • Single Company Predictions    │  • Risk Score (0-100)    │
+│  • Batch Predictions             │  • High/Low Risk Class   │
+│  • Dashboard Analytics           │  • MSME Recommendations  │
+└──────────────────────────────────┴──────────────────────────┘
 ```
 
-**Classification Rule:**
-- **High Risk** (1): Delay_Risk_Ratio > 0.50
-- **Low Risk** (0): Delay_Risk_Ratio ≤ 0.50
+---
 
-#### Sector Categorization
+## 📊 **Complete Data Workflow**
 
-Implemented keyword-based heuristic to classify companies:
+### **PHASE 1: Data Collection & Ingestion**
+
+#### 1.1 MSME Samadhaan Grievance Database
+
+```python
+# Source: https://samadhaan.msme.gov.in/
+# Scraper: backend/src/scraper/samadhaan_main.py
+
+Data Extracted per CPSE:
+├── Company Name
+├── Total Applications
+├── Rejected Cases
+├── Disposed Cases ✅ (Successfully resolved/paid)
+├── Pending Cases ⏳ (Still awaiting payment)
+├── Amount Involved 💰
+└── Last Updated
+
+Output: backend/data/raw/raw_central_psu_cases.csv
+        (128+ Central PSUs with payment history)
+```
+
+#### 1.2 YFinance Corporate Financial Signals
+
+```python
+# Source: Yahoo Finance API
+# Scraper: backend/src/scraper/yfinance_signals.py
+
+Data Extracted per Listed CPSE:
+├── Debt-to-Equity Ratio
+├── Profit Margin
+├── Return on Equity (ROE)
+├── Price-to-Book Ratio
+└── Industry Sector Classification
+
+Output: backend/data/processed/yfinance_signals.csv
+        (128 companies × 5 financial signals)
+```
+
+---
+
+### **PHASE 2: Data Cleaning & Normalization**
+
+#### 2.1 Name Normalization
+
+```
+Input (Dirty):   "HINDUSTAN PETROLEUM CORPORATION LTD, HAZIRA UNIT"
+                  ↓ Cleaning Pipeline
+Output (Clean):  "HINDUSTAN PETROLEUM CORPORATION"
+
+Cleaning Steps:
+✓ Uppercase standardization
+✓ Remove unit-specific details
+✓ Standardize legal suffixes (PVT LTD, LIMITED → remove)
+✓ Remove special characters & extra spaces
+✓ Trim whitespace
+```
+
+#### 2.2 Data Merging & Enrichment
+
+```
+Left Table:  Samadhaan Data (128 PSUs) ─┐
+                                         ├─→ Fuzzy Match → Merged DataFrame
+Right Table: YFinance Data (Financial) ─┘
+                                         
+Join Type: LEFT OUTER
+├── Listed PSUs → Get financial data ✅
+├── Unlisted PSUs → Set to NULL, impute with 0 🔄
+└── Government-owned → Identify separately
+
+Outcome Variables Created:
+├── Total_Cases = Disposed + Pending
+├── Delay_Risk_Ratio = Pending / Total
+└── High_Risk_Flag = (Delay_Risk_Ratio > 0.46) ? 1 : 0 ⚠️
+```
+
+---
+
+### **PHASE 3: Feature Engineering**
+
+#### 3.1 Sector Categorization (5 Sectors)
 
 | Sector | Keywords | Example |
 |--------|----------|---------|
-| 🔋 **Energy_Mining** | POWER, OIL, COAL, ENERGY, GAS, NTPC, ONGC | Indian Oil, NTPC, BHEL |
+| 🔋 **Energy_Mining** | POWER, OIL, COAL, ENERGY, GAS, NTPC, ONGC | Indian Oil, NTPC |
 | 🛣️ **Infrastructure** | RAIL, PORT, HIGHWAY, CONSTRUCTION, STEEL | RVNL, IRCON, SAIL |
 | 🏦 **Financial_Services** | BANK, FINANCE, INSURANCE, FUND | SBI, BoB, LIC |
-| ✈️ **Defense_Aerospace** | AERO, DEFENCE, AVIATION, HAL | HAL, BEL, Mazagon Dock |
-| 🏢 **Other_Govt_Services** | (Default) | BSNL, Air India, etc |
+| ✈️ **Defense_Aerospace** | AERO, DEFENCE, AVIATION, HAL | HAL, BEL |
+| 🏢 **Other_Govt_Services** | (Default category) | BSNL, Air India |
 
-**Why sector categorization?**
-> To test if certain industries (like Defense) are naturally slower at clearing invoices regardless of their bank balance.
+#### 3.2 Feature Matrix (10 Total Features)
 
-#### Sector-Relative Scaling
-
-**Sector-Relative Profit:**
 ```
-SR_Profit = Company Profit - Sector Median Profit
+📋 BASE FEATURES (3):
+├── Is_Public: 1 = Listed on stock exchange, 0 = Unlisted
+├── Debt_to_Equity: From YFinance
+└── Profit_Margin: From YFinance
+
+📊 SECTOR-RELATIVE FEATURES (2):
+├── Sector_Relative_Profit = Company Profit - Sector Median
+│   └── Identifies if company is better/worse than peers
+└── Sector_Relative_Debt = Company Debt/Equity - Sector Median
+    └── Shows if company more/less leveraged than peers
+
+🏷️ CATEGORICAL FEATURES (5, One-Hot Encoded):
+├── Sector_Energy_Mining [0/1]
+├── Sector_Infrastructure [0/1]
+├── Sector_Financial_Services [0/1]
+├── Sector_Defense_Aerospace [0/1]
+└── Sector_Other_Govt_Services [0/1]
+    (Drop first = 4 sectors included, 1 is baseline)
+
+🎯 TARGET VARIABLE:
+├── 1 = HIGH RISK: Delay_Risk_Ratio > 46%
+└── 0 = LOW RISK: Delay_Risk_Ratio ≤ 46%
 ```
-
-**Sector-Relative Debt:**
-```
-SR_Debt = Company D/E Ratio - Sector Median D/E
-```
-
-**Why?**
-> A 5% profit margin is "Good" for a utility company but "Bad" for a tech firm. Scaling provides context and helps the model understand relative performance within industry norms.
-
-#### Final Feature Matrix (10 Dimensions)
-
-| # | Feature | Type | Source |
-|---|---------|------|--------|
-| 1 | `Is_Public` | Binary | YFinance (Ticker presence) |
-| 2 | `Debt_to_Equity` | Numeric | YFinance |
-| 3 | `Profit_Margin` | Numeric | YFinance |
-| 4 | `Sector_Relative_Profit` | Numeric | Engineered |
-| 5 | `Sector_Relative_Debt` | Numeric | Engineered |
-| 6 | `Sector_Energy_Mining` | Binary (One-Hot) | Engineered |
-| 7 | `Sector_Infrastructure` | Binary (One-Hot) | Engineered |
-| 8 | `Sector_Financial_Services` | Binary (One-Hot) | Engineered |
-| 9 | `Sector_Defense_Aerospace` | Binary (One-Hot) | Engineered |
-| 10 | `Sector_Other_Govt` | Binary (One-Hot) | Engineered |
-
-</details>
 
 ---
 
-### Step 3️⃣: Handling Small & Imbalanced Data
+### **PHASE 4: Model Training & Optimization**
 
-<details>
-<summary><b>⚖️ SMOTE Oversampling Technique</b></summary>
-
-**Problem:** With only ~150 samples, the model struggled to learn minority class (high-risk) patterns.
-
-**Solution:** Synthetic Minority Over-sampling Technique (SMOTE)
+#### 4.1 Bayesian Hyperparameter Tuning
 
 ```python
-from imblearn.over_sampling import SMOTE
+# Algorithm: XGBoost Classification (Binary)
+# Optimizer: Optuna (Bayesian Search, 150 trials)
 
-# Before SMOTE:
-# Class 0 (Low Risk):  94 samples
-# Class 1 (High Risk): 56 samples  ← Minority
+Hyperparameters Tuned:
+├── n_estimators: 50-300 (boosting rounds)
+├── max_depth: 2-7 (tree depth)
+├── learning_rate: 0.01-0.3 (shrinkage)
+├── subsample: 0.5-1.0 (row sampling)
+├── colsample_bytree: 0.5-1.0 (feature sampling)
+├── gamma: 0-5 (min loss reduction)
+└── min_child_weight: 1-5 (min samples in leaf)
 
-# After SMOTE:
-# Both classes balanced to ~94 samples each
-```
+Data Split:
+├── Train Set: 80% (pattern learning)
+├── Test Set: 20% (evaluation)
+└── Random State: 42 (reproducibility)
 
-**Benefits:**
-✅ Prevents model from simply guessing majority class  
-✅ Improves Recall of High-Risk entities (from 72% → 88%)  
-✅ Better generalization on unseen data
-
-</details>
-
----
-
-### Step 4️⃣: The Modeling Evolution
-
-<details>
-<summary><b>🤖 Three Generations of Models</b></summary>
-
-#### Generation 1: XGBoost Baseline ✅
-- Gradient boosting classifier
-- Handles missing values natively
-- Fast training
-- **Result:** 82% Accuracy
-
-#### Generation 2: Voting Ensemble ✅
-- Combines: XGBoost + Random Forest + Logistic Regression
-- Each model "votes" on the outcome
-- More robust predictions
-- **Result:** 84% Accuracy
-
-#### Generation 3: Optuna-Optimized XGBoost ⭐ (FINAL)
-- Bayesian Hyperparameter Optimization
-- Searched 150 trial combinations
-- Found optimal hyperparameters mathematically
-- **Result:** 87.5% Accuracy, 88% Recall
-
-**Hyperparameters Tuned:**
-```python
-{
-    'n_estimators': 245,        # Number of boosting rounds
-    'max_depth': 5,             # Tree depth (controls overfitting)
-    'learning_rate': 0.08,      # Shrinkage (makes learning gradual)
-    'subsample': 0.80,          # Row sampling (regularization)
-    'colsample_bytree': 0.85,   # Feature sampling (regularization)
-    'gamma': 1.5,               # Min loss reduction for split
-    'min_child_weight': 2       # Min samples in leaf
-}
-```
-
-</details>
-
----
-
-### Step 5️⃣: Dynamic Threshold Tuning
-
-<details>
-<summary><b>🎯 Why Not 50% Probability?</b></summary>
-
-**Standard ML Logic:** Classify as "High Risk" when probability > 0.50
-
-**Our Approach:** Find optimal threshold mathematically
-
-```
-For MSMEs, a False Alarm is better than missing real High-Risk payer.
-Optimize for Recall, not Accuracy.
-```
-
-**Calculation Method:**
-- Generated PR (Precision-Recall) curve
-- Searched for threshold that maximizes F2-Score (Recall-weighted)
-- Found optimal threshold: **0.46** instead of 0.50
-
-**Impact:**
-- Standard 50% threshold: Recall = 72%
-- Optimized 46% threshold: Recall = 88% ⬆️
-- Trade-off: Precision drops slightly (87% → 84%)
-
-**Verdict:** Worth it. MSMEs prefer protection over false alarms.
-
-</details>
-
----
-
-## 📊 4. The "Scientific Breakthrough" (Results)
-
-### 🏆 Final Model Performance
-
-```
-┌──────────────────────────────────────────┐
-│      XGBOOST SECTOR-OPTIMIZED MODEL     │
-├──────────────────────────────────────────┤
-│ Accuracy:   87.5%  ████████░            │
-│ Precision:  84.2%  ████████░            │
-│ Recall:     88.1%  ████████░            │
-│ F1-Score:   86.1%  ████████░            │
-│ AUC-ROC:    0.925  ████████░            │
-└──────────────────────────────────────────┘
-```
-
-### 🔍 Feature Importance Analysis - THE KEY FINDING
-
-| Feature | Importance | Impact |
-|---------|-----------|--------|
-| 🌍 **Public Listing Status** | **48.3%** | 🔴 DOMINANT |
-| 🏭 **Sector Heuristics** | **51.7%** | 🔴 DOMINANT |
-| 💰 **Financial Health** | **0.0%** | ⚪ NEGLIGIBLE |
-
-### 📌 The Core Insight - Final Verdict
-
-> **Government payment delays are a BUREAUCRATIC/STRUCTURAL issue, not a FINANCIAL/LIQUIDITY issue.**
-
-**Evidence:**
-- ✅ Profit Margin Impact: 0.0%
-- ✅ Debt-to-Equity Impact: 0.0%
-- ✅ Public Listing Impact: 48.3%
-- ✅ Sector Impact: 51.7%
-
-**Interpretation:**
-```
-If a CPSE is publicly listed → Better discipline, faster payments
-If a CPSE is in traditional sectors → Slower due to bureaucratic processes
-If a CPSE is bankrupt or rich → Almost no difference in payment speed
-```
-
-**Business Implications:**
-1. **For MSMEs:** Avoid unlisted CPSEs in traditional sectors (Energy, Govt Services)
-2. **For Policy Makers:** Financial health ≠ payment timeliness. Structural reforms needed
-3. **For CPSEs:** Public accountability (listing) forces faster payments
-
----
-
-## 🛠️ 5. Technical Implementation Details
-
-### Optimization Strategy: Bayesian Search vs GridSearch
-
-<details>
-<summary><b>⚡ Why Optuna over GridSearch?</b></summary>
-
-**GridSearch (Brute Force):**
-- Tests all combinations: 5 × 5 × 5 × ... = 15,625 trials
-- Time: 48+ hours
-- Resource intensive
-
-**Optuna (Bayesian Search):**
-- Smart selection: Tests only 150 promising combinations
-- Prunes unpromising branches early
-- Time: 8 minutes ⚡
-- **Result:** Same or better performance, 360x faster
-
-**Key Algorithm:** Tree-structured Parzen Estimator (TPE)
-- Learns from past trials
-- Focuses search in high-performing regions
-- Mathematically optimal
-
-</details>
-
-### Model Persistence
-
-```python
-# Saving the model
-joblib.dump(best_clf, 'models/xgboost_risk_model.pkl')
-joblib.dump(features, 'models/model_features.pkl')
-
-# Loading for predictions
-best_clf = joblib.load('models/xgboost_risk_model.pkl')
-features = joblib.load('models/model_features.pkl')
-```
-
-**Why two files?**
-- **Separation of Concerns:** Model logic separate from feature names
-- **Debugging:** Easy to verify feature list
-- **Production:** Features can be updated without retraining
-
-### Handling Nulls & Missing Data
-
-```python
-# For unlisted CPSEs (no YFinance data):
-for col in financial_features:
-    if col in merged_df.columns:
-        merged_df[col] = merged_df[col].fillna(
-            merged_df[col].median()  # Sector-wise median
-        )
-    else:
-        merged_df[col] = 0.0
-```
-
-**Strategy:** Median Imputation by Sector
-- Unlisted utilities get utility-sector median debt
-- Unlisted banks get financial-sector median profits
-- More realistic than global mean
-
----
-
-## 📁 Repository Structure
-
-```
-B2B_invoice_payment_delay_predictor/
-│
-├── 📂 config/
-│   └── settings.py                         # Paths & environment variables
-│
-├── 📂 data/
-│   ├── raw/
-│   │   ├── raw_central_psu_cases.csv      # MSME Samadhaan data (150+ CPSEs)
-│   │   ├── Report_1.xls, Report_2.xls    # Source reports
-│   │   └── report_discovery_log.csv       # Processing logs
-│   │
-│   ├── interim/
-│   │   └── tofler_lookup_list.csv         # Cleaned company names
-│   │
-│   ├── external/
-│   │   └── (Reserved for external APIs)
-│   │
-│   └── processed/
-│       ├── survival_baseline_features.csv  # Engineered features
-│       ├── yfinance_signals.csv            # Financial data
-│       └── unmapped_psus.csv               # Unlisted entities
-│
-├── 📂 models/
-│   ├── xgboost_risk_model.pkl             # Trained classifier
-│   └── model_features.pkl                  # Feature names
-│
-├── 📂 src/
-│   ├── data_cleaning/
-│   │   ├── __init__.py
-│   │   ├── name_normalizer.py             # Clean company names
-│   │   ├── rbi_processor.py                # RBI data handling
-│   │   └── tofler_merger.py               # Fuzzy merge logic
-│   │
-│   ├── features/
-│   │   ├── __init__.py
-│   │   └── signal_generator.py            # Feature engineering
-│   │
-│   ├── models/
-│   │   ├── __init__.py
-│   │   └── train_xgboost_sector_optimized.py  # ⭐ MAIN MODEL
-│   │
-│   └── scraper/
-│       ├── __init__.py
-│       ├── samadhaan_main.py              # MSME Samadhaan scraper
-│       ├── yfinance_signals.py            # Yahoo Finance scraper
-│       └── selectors.py                    # Web selectors
-│
-├── 📂 app/
-│   ├── __init__.py
-│   ├── api.py                             # FastAPI endpoints
-│   └── dashboard.py                        # Streamlit frontend
-│
-├── .env                                    # API keys & secrets
-├── .git/                                   # Version control
-├── .gitignore                              # Git ignore rules
-├── requirements.txt                        # Python dependencies
-├── PROJECT_WORKFLOW.md                     # Complete workflow guide
-├── Training_logs.txt                       # Training history
-└── README.md                               # This file
+Evaluation Metric: Recall
+└── Objective: Maximize recall for high-risk entities (Achieved: 88.0%) 🎯
 ```
 
 ---
 
-## ⚙️ 6. Setup & Installation
+### **PHASE 5: Threshold Optimization**
+
+```
+Optuna tuned decision threshold to maximize F1-score
+┌─────────────────────────────────────────────────────┐
+│  Optimal Decision Threshold = 0.46                  │
+├─────────────────────────────────────────────────────┤
+│  • Risk Score ≥ 0.46 → HIGH RISK ⚠️                 │
+│  • Risk Score < 0.46  → LOW RISK ✅                 │
+└─────────────────────────────────────────────────────┘
+
+This threshold maximizes recall (catch risky entities)
+while maintaining acceptable precision (minimize false alarms)
+```
+
+---
+
+## 🔧 **Installation & Setup**
 
 ### Prerequisites
-- Python 3.10 or higher
-- pip (Python package manager)
-- Virtual environment (recommended)
 
-### Quick Start
+- **Python 3.12+** ([Download](https://www.python.org/downloads/))
+- **Node.js 18+** ([Download](https://nodejs.org/))
+- **Git** (for version control)
 
-<details>
-<summary><b>📋 Step-by-step Installation</b></summary>
+### Step 1: Clone Repository
 
-#### 1. Clone Repository
 ```bash
-git clone https://github.com/yourusername/B2B-invoice-payment-predictor.git
-cd B2B-invoice-payment-delay-predictor
+git clone https://github.com/yourusername/b2b-invoice-delay-predictor.git
+cd b2b-invoice-delay-predictor
 ```
 
-#### 2. Create Virtual Environment
+### Step 2: Backend Setup
+
 ```bash
+# Create virtual environment
 python -m venv venv
-source venv/bin/activate    # On Windows: venv\Scripts\activate
+
+# Activate (Windows)
+venv\Scripts\Activate
+
+# Install dependencies
+pip install -r backend/requirements.txt
 ```
 
-#### 3. Install Dependencies
+#### Backend Dependencies:
+
+```
+Core Stack:
+- pandas>=2.2.0       (Data manipulation)
+- numpy>=1.26.0       (Numerical computing)
+- scikit-learn>=1.4.0 (ML utilities)
+
+Model & Optimization:
+- xgboost>=2.0.0      (Classification)
+- optuna>=3.6.0       (Hyperparameter tuning)
+- joblib>=1.3.0       (Model serialization)
+
+API Server:
+- fastapi>=0.110.0    (Web framework)
+- uvicorn>=0.27.0     (ASGI server)
+
+Data Pipeline:
+- yfinance>=0.2.33    (Financial data)
+- playwright>=1.41.0  (Web scraping)
+- beautifulsoup4>=4.12.0 (HTML parsing)
+- thefuzz>=0.22.0     (Name matching)
+```
+
+### Step 3: Frontend Setup
+
 ```bash
-pip install -r requirements.txt
+cd frontend
+
+# Install dependencies
+npm install
+
+cd ..
 ```
-
-#### 4. Configure Environment
-```bash
-# Create .env file
-echo TOFLER_API_KEY=your_key_here > .env
-```
-
-#### 5. Run Training
-```bash
-python -m src.models.train_xgboost_sector_optimized
-```
-
-#### 6. Run Predictions
-```bash
-# API Server
-uvicorn app.api:app --reload
-
-# Dashboard
-streamlit run app/dashboard.py
-```
-
-</details>
 
 ---
 
-### Usage Examples
+## 🚀 **Running the Application**
 
-<details>
-<summary><b>💻 Single Company Prediction</b></summary>
+### Option 1: Run Both Services (Recommended)
 
-```python
-import joblib
-import pandas as pd
+**Terminal 1 — Backend:**
+```bash
+cd backend
+venv\Scripts\Activate
+uvicorn api:app --reload --port 8000
+```
 
-# Load model
-model = joblib.load('models/xgboost_risk_model.pkl')
-features = joblib.load('models/model_features.pkl')
+Expected output:
+```
+INFO:     Uvicorn running on http://127.0.0.1:8000
+INFO:     Application startup complete.
+```
 
-# Prepare company data
-company_data = {
-    'Is_Public': 1,
-    'Debt to Equity': 0.95,
-    'Profit Margin': 12.5,
-    'Sector_Relative_Profit': 2.1,
-    'Sector_Relative_Debt': -0.15,
-    'Sector_Energy_Mining': 1,
-    'Sector_Infrastructure': 0,
-    'Sector_Financial_Services': 0,
-    'Sector_Defense_Aerospace': 0,
-    'Sector_Other_Govt': 0
+**Terminal 2 — Frontend:**
+```bash
+cd frontend
+npm run dev
+```
+
+Expected output:
+```
+VITE v8.0.10 ready in 200 ms
+➜  Local: http://localhost:5175/
+```
+
+### Option 2: Run Backend Only (API Testing)
+
+```bash
+cd backend
+uvicorn api:app --reload --port 8000
+```
+
+Access API documentation: **http://localhost:8000/docs** (Swagger UI)
+
+---
+
+## 📁 **Project Structure**
+
+```
+📦 B2B Invoice Payment Delay Predictor/
+│
+├── 📂 backend/
+│   ├── api.py                           # FastAPI server (main entry point)
+│   ├── inference.py                     # Model prediction logic
+│   ├── requirements.txt                 # Python dependencies
+│   │
+│   ├── 📂 config/
+│   │   └── settings.py                  # Configuration variables
+│   │
+│   ├── 📂 models/
+│   │   ├── xgboost_risk_model.pkl       # Trained XGBoost model ✨
+│   │   └── model_features.pkl           # Feature list
+│   │
+│   ├── 📂 data/
+│   │   ├── raw/                         # Raw scraped data
+│   │   └── processed/                   # Cleaned & processed data
+│   │
+│   └── 📂 src/
+│       ├── 📂 scraper/                  # Web scrapers
+│       │   ├── samadhaan_main.py        # MSME Samadhaan scraper
+│       │   ├── yfinance_signals.py      # Financial data scraper
+│       │   └── selectors.py             # CSS selectors
+│       │
+│       ├── 📂 data_cleaning/            # Data processing
+│       │   ├── name_normalizer.py
+│       │   ├── tofler_merger.py
+│       │   └── mock_gen.py
+│       │
+│       ├── 📂 features/                 # Feature engineering
+│       │   └── signal_generator.py
+│       │
+│       └── 📂 models/                   # Training scripts
+│           ├── train_xgboost_sector_optimized.py  (Final model)
+│           ├── train_cox_model_v1.py
+│           ├── train_ensemble_classifier.py
+│           └── ... (other experiments)
+│
+├── 📂 frontend/
+│   ├── package.json                     # NPM dependencies
+│   ├── vite.config.js                   # Vite configuration
+│   ├── index.html                       # HTML entry point
+│   ├── eslint.config.js                 # Linting config
+│   │
+│   └── 📂 src/
+│       ├── main.jsx                     # React entry point
+│       ├── App.jsx                      # Main app component
+│       ├── api.js                       # API client (HTTP calls)
+│       ├── helpers.js                   # Utility functions
+│       ├── index.css                    # Global styles
+│       │
+│       ├── 📂 components/
+│       │   ├── Navbar.jsx               # Navigation bar
+│       │   ├── Tutorial.jsx             # Onboarding overlay
+│       │   └── Shared.jsx               # Shared UI components
+│       │
+│       ├── 📂 screens/                  # Application pages
+│       │   ├── DashboardScreen.jsx      # Analytics dashboard
+│       │   ├── AnalyzerScreen.jsx       # Single company predictor
+│       │   ├── BatchScreen.jsx          # Batch predictions
+│       │   └── ModelScreen.jsx          # Model explanation
+│       │
+│       └── 📂 data/
+│           └── mockData.js              # Mock data for testing
+│
+├── 📄 .gitignore                        # Git ignore rules
+├── 📄 README.md                         # This file
+└── 📄 PROJECT_WORKFLOW.md               # Detailed methodology
+```
+
+---
+
+## 🧪 **API Endpoints**
+
+All endpoints are documented in interactive Swagger UI: **http://localhost:8000/docs**
+
+### Health Check
+
+```http
+GET /health
+```
+
+Response:
+```json
+{
+  "model_loaded": true,
+  "n_features": 10,
+  "features": ["Is_Public", "Debt to Equity", ...],
+  "decision_threshold": 0.46,
+  "key_finding": "Profit Margin and Debt-to-Equity have 0.0% predictive importance..."
 }
-
-X = pd.DataFrame([company_data])
-risk_prob = model.predict_proba(X)[0][1]  # Probability of high risk
-
-print(f"Risk Score: {risk_prob * 100:.1f}/100")
-print(f"Classification: {'🔴 HIGH RISK' if risk_prob > 0.46 else '🟢 LOW RISK'}")
 ```
 
-</details>
+### Single Company Prediction
 
-<details>
-<summary><b>📊 Batch Prediction</b></summary>
+```http
+POST /predict
+Content-Type: application/json
 
+{
+  "company_name": "NTPC Limited",
+  "disposed_cases": 145,
+  "pending_cases": 110,
+  "is_public": true,
+  "debt_to_equity": 0.95,
+  "profit_margin": 12.5
+}
+```
+
+Response:
+```json
+{
+  "company_name": "NTPC Limited",
+  "risk_score": 72.3,
+  "risk_class": "HIGH_RISK",
+  "disposal_ratio": 0.569,
+  "sector": "Energy_Mining",
+  "key_drivers": {
+    "Public Listing Status": "Listed (High Scrutiny) ⚠️",
+    "Sector": "Energy_Mining (Bureaucratic challenges)"
+  },
+  "recommendations": [
+    "Monitor payment timelines closely",
+    "Consider partial advance payments",
+    "Build contingency cash reserves"
+  ]
+}
+```
+
+### Batch Predictions
+
+```http
+POST /batch
+Content-Type: application/json
+
+{
+  "companies": [
+    { "company_name": "NTPC Limited", "disposed_cases": 145, ... },
+    { "company_name": "SAIL Limited", "disposed_cases": 200, ... }
+  ]
+}
+```
+
+Response: Array of prediction objects
+
+### Dashboard Statistics
+
+```http
+GET /stats
+```
+
+Returns sector-wise risk breakdown and key metrics.
+
+---
+
+## 🎨 **Frontend Screens**
+
+### 1. **Dashboard Screen** 📊
+- Sector-wise risk distribution (bar chart)
+- Key statistics summary
+- Model performance metrics
+
+### 2. **Analyzer Screen** 🔍
+- Single company risk prediction
+- Risk score visualization
+- Key driver breakdown
+- MSME-friendly recommendations
+
+### 3. **Batch Screen** 📋
+- Upload CSV with multiple companies
+- Batch predictions in one request
+- Download results as CSV
+
+### 4. **Model Screen** 🤖
+- Detailed model explanation
+- Research findings
+- Hyperparameter details
+- Threshold optimization story
+
+---
+
+## 🔍 **Key Insights & Research Findings**
+
+### 🎯 Main Discovery: The Bureaucracy Paradox
+
+**Question:** Does financial health predict payment delays?
+
+**Answer:** ❌ **No.** Financial metrics have 0.0% predictive importance.
+
+### 📊 Predictive Importance Breakdown
+
+```
+┌─────────────────────────────────────────┬──────────┐
+│ Factor                                  │ Importance│
+├─────────────────────────────────────────┼──────────┤
+│ 🏛️  Public Listing Status (Is_Public)   │  48.3%   │ ✅ KEY
+│ 🏭 Sector Classification                │  51.7%   │ ✅ KEY
+│ 💰 Profit Margin                        │   0.0%   │ ❌ NONE
+│ 📊 Debt-to-Equity Ratio                 │   0.0%   │ ❌ NONE
+│ 🔄 Sector-Relative Features             │   0.0%   │ ❌ NONE
+└─────────────────────────────────────────┴──────────┘
+```
+
+### 💡 What This Means
+
+1. **Financial Health ≠ Payment Behavior**
+   - A profitable company can still delay payments
+   - A financially stressed company can pay on time
+   - Money isn't the issue — structure is.
+
+2. **Public Accountability Matters (48.3%)**
+   - Listed companies face regulatory scrutiny
+   - Stock market investors demand transparency
+   - Payment delays directly impact stock price
+   - **Result:** More efficient payment cycles
+
+3. **Sector Bureaucracy Varies (51.7%)**
+   - Infrastructure sector has different approval chains than Banking
+   - Defense sector has stricter compliance workflows
+   - Energy sector faces commodity price volatility
+   - **Result:** Sector-specific payment patterns
+
+### 🎯 Practical Implications for MSMEs
+
+| If Supplier Deals With | Risk Level | Why | Recommendation |
+|------------------------|-----------|-----|-----------------|
+| Listed Bank | 🟢 **LOW** | Regulatory scrutiny | Confidence in payment |
+| Unlisted Energy PSU | 🔴 **HIGH** | Bureaucratic bottlenecks | Require partial advance |
+| Infrastructure CPSE | 🔴 **HIGH** | Complex approval process | Build cash reserves |
+| Defense Contractor | 🔴 **HIGH** | Compliance overhead | Long payment cycles |
+
+---
+
+## 📚 **Technology Stack**
+
+### Backend
+
+| Component | Technology | Why |
+|-----------|-----------|-----|
+| **Web Framework** | FastAPI | Fast, async, auto-documentation |
+| **Server** | Uvicorn | ASGI server for Python |
+| **ML Model** | XGBoost | Gradient boosting, interpretable |
+| **Optimization** | Optuna | Bayesian hyperparameter search |
+| **Data** | Pandas + NumPy | Efficient data manipulation |
+| **Serialization** | Joblib | Save/load trained models |
+| **Scraping** | Playwright + BeautifulSoup | Modern web scraping |
+| **CORS** | FastAPI Middleware | Cross-origin requests from frontend |
+
+### Frontend
+
+| Component | Technology | Why |
+|-----------|-----------|-----|
+| **Framework** | React 19 | Component-based UI |
+| **Build Tool** | Vite | Ultra-fast development server |
+| **Animations** | Framer Motion | Physics-based animations |
+| **Charts** | Recharts | React charting library |
+| **Icons** | Lucide-React | Beautiful, lightweight icons |
+| **Styling** | Custom CSS | Fine-grained control, variables |
+| **HTTP** | Fetch API | Native browser HTTP |
+
+### Development
+
+| Tool | Purpose |
+|------|---------|
+| **Git** | Version control |
+| **ESLint** | Code quality (JavaScript) |
+| **Pytest** | Unit testing (Python) |
+| **Black** | Code formatting (Python) |
+
+---
+
+## 👨‍💻 **Development**
+
+### Project Structure Explanation
+
+#### Backend Pipeline Flow
+
+```
+User Input
+    ↓
+[api.py] — FastAPI endpoint
+    ↓
+[inference.py] — Feature engineering & prediction
+    ↓
+[xgboost_risk_model.pkl] — Trained model
+    ↓
+Risk Score + Recommendations
+    ↓
+JSON Response → Frontend
+```
+
+#### Frontend Component Hierarchy
+
+```
+App.jsx (Main Shell)
+├── Navbar (Navigation)
+├── Tutorial (Onboarding Overlay)
+└── Screen Router
+    ├── DashboardScreen
+    ├── AnalyzerScreen
+    ├── BatchScreen
+    └── ModelScreen
+```
+
+### Running in Development Mode
+
+#### Backend Development
 ```bash
-# Upload CSV with columns:
-# company_name, disposed_cases, pending_cases, debt_to_equity, profit_margin
-
-curl -X POST "http://localhost:8000/api/v1/predict/batch" \
-     -F "file=@companies.csv"
-
-# Response: Real-time predictions for all companies
+cd backend
+uvicorn api:app --reload --port 8000
 ```
 
-</details>
+The `--reload` flag enables:
+- ✅ Auto-reload on code changes
+- ✅ Debuggable error messages
+- ✅ Interactive API docs at `/docs`
 
----
-
-## 📚 Dependencies
-
-| Library | Version | Purpose |
-|---------|---------|---------|
-| pandas | ≥2.2.0 | Data manipulation |
-| numpy | ≥1.26.0 | Numerical computing |
-| scikit-learn | ≥1.4.0 | ML algorithms |
-| **xgboost** | ≥2.0.0 | Gradient boosting (Core) |
-| optuna | ≥3.6.0 | Bayesian optimization |
-| imbalanced-learn | ≥0.11.0 | SMOTE oversampling |
-| joblib | ≥1.3.0 | Model persistence |
-| yfinance | ≥0.2.33 | Financial data scraping |
-| fastapi | ≥0.110.0 | API framework |
-| streamlit | ≥1.31.0 | Dashboard frontend |
-| thefuzz | ≥0.22.0 | Fuzzy string matching |
-
----
-
-## 🚀 7. Quick Links & Navigation
-
-<details>
-<summary><b>📖 Documentation & Resources</b></summary>
-
-### Core Code Files
-- 🔧 **Data Pipeline:** [src/data_cleaning/](src/data_cleaning/)
-- 🤖 **Model Training:** [src/models/train_xgboost_sector_optimized.py](src/models/train_xgboost_sector_optimized.py)
-- 🌐 **API Layer:** [app/api.py](app/api.py)
-- 📊 **Dashboard:** [app/dashboard.py](app/dashboard.py)
-
-### Data Files
-- 📥 **Raw Data:** [data/raw/raw_central_psu_cases.csv](data/raw/raw_central_psu_cases.csv)
-- ✨ **Processed Data:** [data/processed/](data/processed/)
-- 🎯 **Feature Engineering Guide:** [PROJECT_WORKFLOW.md](PROJECT_WORKFLOW.md)
-
-### Learning Resources
-- [XGBoost Documentation](https://xgboost.readthedocs.io/)
-- [Optuna Hyperparameter Tuning](https://optuna.org/)
-- [Scikit-learn SMOTE](https://imbalanced-learn.org/stable/references/generated/imblearn.over_sampling.SMOTE.html)
-
-</details>
-
----
-
-## 📈 8. Model Metrics Deep Dive
-
-### Confusion Matrix Breakdown
-
-```
-                 PREDICTED
-             ┌──────────────┐
-             │ Negative │ Positive
-    ┌────────┼──────────┼──────────┐
-    │Negative│    94    │    6     │  (True Negatives: 94, False Positives: 6)
-A   ├────────┼──────────┼──────────┤
-C   │Positive│    8     │    20    │  (False Negatives: 8, True Positives: 20)
-T   └────────┴──────────┴──────────┘
-U
-A   Accuracy = (94 + 20) / 128 = 89.1%
-L   Precision = 20 / (20 + 6) = 77%
-    Recall = 20 / (20 + 8) = 71%
+#### Frontend Development
+```bash
+cd frontend
+npm run dev
 ```
 
-**Interpretation:**
-- ✅ 89% of predictions correct
-- ⚠️ 8 missed high-risk companies (False Negatives)
-- ⚠️ 6 false alarms (False Positives)
+Vite provides:
+- ✅ Hot Module Replacement (HMR)
+- ✅ Instant feedback on code changes
+- ✅ Optimized bundle size
 
 ---
 
-## 🎓 9. Academic Credits & Contributions
+## 📝 **License**
 
-### Primary Developer
-- **Bikram Hawladar** (3rd Year B.Tech, IIIT Dharwad)
-  - Research Design & Methodology
-  - Data Engineering & Feature Extraction
-  - Model Development & Optimization
-  - Statistical Analysis
+This project is licensed under the **MIT License** — See [LICENSE](LICENSE) file for details.
 
-### Key Contributions
-
-| Component | Contribution | Impact |
-|-----------|--------------|--------|
-| 📊 Feature Engineering | Sector-Relative Metrics | +3.2% Accuracy |
-| 🤖 Model Selection | XGBoost vs Ensemble | 360x faster inference |
-| ⚖️ SMOTE Implementation | Minority Class Handling | +16% Recall |
-| 🎯 Threshold Optimization | Custom Decision Boundary | +88% MSME Protection |
-| 📈 Bayesian Tuning | Optuna Integration | 48→8 min training |
-
-### Research Insights
-- **Breakthrough:** Bureaucracy > Finance in payment delays
-- **Novel Approach:** Sector-relative feature scaling for government entities
-- **Application:** Predictive analytics for B2B fintech platforms
-
-### Acknowledgments
-- MSME Samadhaan Portal (Data source)
-- Yahoo Finance / yfinance (Financial signals)
-- IIIT Dharwad Faculty & Mentors
+**Attribution:** Built by **Bikram Hawladar**, 4th Year B.Tech, IIIT Dharwad
 
 ---
 
-## 📄 License
-
-This project is licensed under the **MIT License** - see [LICENSE](LICENSE) file for details.
-
-### Terms of Use
-- ✅ Free for academic & research use
-- ✅ Free for non-commercial projects
-- ⚠️ Commercial use requires attribution
-- ⚠️ No warranty provided
-
----
-
-## 🤝 Contributing
+## 🙌 **Contributing**
 
 Contributions are welcome! Please:
+
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add AmazingFeature'`)
+4. Push to branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
 ---
 
-## 📧 Contact & Support
+## 📞 **Support & Questions**
 
-- **Author:** Bikram Hawladar
-- **Email:** [bikram@iiitdh.ac.in](mailto:bikram@iiitdh.ac.in)
-- **GitHub:** [Your GitHub Profile]
-- **Issues:** [Report bugs here](https://github.com/yourusername/B2B-invoice-payment-predictor/issues)
-
----
-
-## 📝 Citation
-
-If you use this project in your research, please cite:
-
-```bibtex
-@software{hawladar2024b2b,
-  author = {Hawladar, Bikram},
-  title = {B2B Invoice Payment Delay Predictor: Predicting MSME Payment Risks 
-           through CPSE Financials and Bureaucratic Heuristics},
-  year = {2024},
-  url = {https://github.com/yourusername/B2B-invoice-payment-predictor},
-  institution = {IIIT Dharwad}
-}
-```
+- 📧 Email: (connect.bikram9632@gmail.com)
+- 🐙 GitHub Issues: [Create an issue](https://github.com/Phantomcoder9632/B2B-Invoice-payment-delay-predictor/issues)
+- 📚 Documentation: See [PROJECT_WORKFLOW.md](backend/PROJECT_WORKFLOW.md) for technical details
 
 ---
 
-## ⭐ Support This Project
+## 🎉 **Acknowledgments**
 
-If you found this project useful:
-- ⭐ Star the repository
-- 🔗 Share with others
-- 📧 Report issues & improvements
-- 💡 Contribute enhancements
+- **MSME Samadhaan Portal** — For grievance data
+- **Yahoo Finance** — For financial data
+- **Optuna, XGBoost teams** — For excellent ML libraries
+- **FastAPI & React communities** — For amazing frameworks
 
-**Last Updated:** May 2, 2026  
-**Model Version:** 2.0 (XGBoost Sector-Optimized)
+---
+
+**Made with responsibility for Indian MSMEs**
+
+<div align="center">
+
+![Python](https://img.shields.io/badge/Made%20with-Python%20%2B%20React-blue?style=flat-square)
+![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen?style=flat-square)
+![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg?style=flat-square)
+
+**⭐ If this project helped you, please consider giving it a star!**
+
+</div>
