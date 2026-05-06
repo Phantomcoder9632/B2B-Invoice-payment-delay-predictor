@@ -3,6 +3,8 @@
 > **Predicting MSME Payment Risks through Bureaucratic Heuristics + Data Science**  
 > *Solving the capital stagnation crisis facing Indian MSMEs*
 
+[**🌐 Live Demo →**](https://b2-b-invoice-payment-delay-predicto.vercel.app/)
+
 [![Python](https://img.shields.io/badge/Python-3.12%2B-blue?logo=python&style=for-the-badge)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/API-FastAPI-green?logo=fastapi&style=for-the-badge)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React-19-cyan?logo=react&style=for-the-badge)](https://react.dev/)
